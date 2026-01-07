@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { MessageSquare, Star, RefreshCw, Filter, Eye, ChevronDown } from "lucide-react";
+import { MessageSquare, Star, RefreshCw, Filter, Eye, ChevronDown, Calendar, Search, X, Pause } from "lucide-react";
 
 interface Review {
     id: string;
@@ -20,9 +20,12 @@ export default function AdminDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
     const [filterRating, setFilterRating] = useState<number | null>(null);
+    const [filterDateRange, setFilterDateRange] = useState<string>("all");
+    const [searchText, setSearchText] = useState("");
     const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
     const [nextRefresh, setNextRefresh] = useState(10);
     const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+    const [isPageVisible, setIsPageVisible] = useState(true);
 
     const fetchReviews = useCallback(async () => {
         try {
@@ -48,21 +51,86 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         fetchReviews();
-        const timer = setInterval(() => {
-            setNextRefresh((prev) => {
-                if (prev <= 1) {
-                    fetchReviews();
-                    return 10;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-        return () => clearInterval(timer);
+
+        let timer: NodeJS.Timeout | null = null;
+
+        const startTimer = () => {
+            if (timer) clearInterval(timer);
+            timer = setInterval(() => {
+                setNextRefresh((prev) => {
+                    if (prev <= 1) {
+                        fetchReviews();
+                        return 10;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        };
+
+        const stopTimer = () => {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                // User came back to the tab - fetch fresh data and restart timer
+                setIsPageVisible(true);
+                fetchReviews();
+                startTimer();
+            } else {
+                // Tab is hidden - pause the timer
+                setIsPageVisible(false);
+                stopTimer();
+            }
+        };
+
+        // Start timer only if page is visible
+        if (document.visibilityState === "visible") {
+            startTimer();
+        }
+
+        // Listen for visibility changes
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        return () => {
+            stopTimer();
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
     }, [fetchReviews]);
 
-    const filteredReviews = filterRating
-        ? reviews.filter((r) => r.rating === filterRating)
-        : reviews;
+    // Filter by date range
+    const getDateFilter = (dateStr: string) => {
+        const reviewDate = new Date(dateStr);
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+        switch (filterDateRange) {
+            case "today":
+                return reviewDate >= today;
+            case "week":
+                return reviewDate >= weekAgo;
+            case "month":
+                return reviewDate >= monthAgo;
+            default:
+                return true;
+        }
+    };
+
+    // Apply all filters
+    const filteredReviews = reviews.filter((r) => {
+        const matchesRating = filterRating ? r.rating === filterRating : true;
+        const matchesDate = getDateFilter(r.created_at);
+        const matchesSearch = searchText
+            ? r.review_text.toLowerCase().includes(searchText.toLowerCase()) ||
+            (r.ai_summary && r.ai_summary.toLowerCase().includes(searchText.toLowerCase()))
+            : true;
+        return matchesRating && matchesDate && matchesSearch;
+    });
 
     const averageRating = reviews.length
         ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
@@ -73,6 +141,14 @@ export default function AdminDashboard() {
     );
 
     const maxCount = Math.max(...ratingCounts, 1);
+
+    const clearFilters = () => {
+        setFilterRating(null);
+        setFilterDateRange("all");
+        setSearchText("");
+    };
+
+    const hasActiveFilters = filterRating !== null || filterDateRange !== "all" || searchText !== "";
 
     const formatDate = (dateStr: string) => {
         return new Date(dateStr).toLocaleDateString("en-US", {
@@ -99,7 +175,7 @@ export default function AdminDashboard() {
     return (
         <div className="min-h-screen bg-slate-50 p-6 md:p-8">
             {/* Header */}
-            <header className="max-w-7xl mx-auto mb-8">
+            <header className="max-w-7xl mx-auto mb-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold text-slate-800">
@@ -110,9 +186,21 @@ export default function AdminDashboard() {
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 text-sm text-slate-500 bg-white px-3 py-2 rounded-lg border border-slate-200">
-                            <RefreshCw size={14} className={nextRefresh <= 3 ? "animate-spin" : ""} />
-                            <span>{nextRefresh}s</span>
+                        <div className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg border transition-colors ${isPageVisible
+                                ? "text-slate-500 bg-white border-slate-200"
+                                : "text-amber-600 bg-amber-50 border-amber-200"
+                            }`}>
+                            {isPageVisible ? (
+                                <>
+                                    <RefreshCw size={14} className={nextRefresh <= 3 ? "animate-spin" : ""} />
+                                    <span>{nextRefresh}s</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Pause size={14} />
+                                    <span>Paused</span>
+                                </>
+                            )}
                         </div>
                         <Link
                             href="/"
@@ -124,78 +212,111 @@ export default function AdminDashboard() {
                 </div>
             </header>
 
-            <div className="max-w-7xl mx-auto space-y-6">
-                {/* Stats + Chart Row - 1/5 + 1/5 + 3/5 ratio */}
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            <div className="max-w-7xl mx-auto space-y-4">
+                {/* Stats + Chart Row - Compact */}
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
                     {/* Total Reviews - 1/5 */}
-                    <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                        <div className="flex items-start justify-between">
+                    <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                        <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-slate-500 text-sm font-medium">Total Reviews</p>
-                                <p className="text-4xl font-bold text-slate-800 mt-2">{total}</p>
-                                <p className="text-slate-400 text-sm mt-1">All time submissions</p>
+                                <p className="text-slate-500 text-xs font-medium">Total Reviews</p>
+                                <p className="text-2xl font-bold text-slate-800 mt-1">{total}</p>
                             </div>
-                            <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
-                                <MessageSquare className="text-emerald-500" size={20} />
+                            <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
+                                <MessageSquare className="text-emerald-500" size={16} />
                             </div>
                         </div>
                     </div>
 
                     {/* Average Rating - 1/5 */}
-                    <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                        <div className="flex items-start justify-between">
+                    <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                        <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-slate-500 text-sm font-medium">Average Rating</p>
-                                <p className="text-4xl font-bold text-slate-800 mt-2">{averageRating}</p>
-                                <p className="text-slate-400 text-sm mt-1">Out of 5 stars</p>
+                                <p className="text-slate-500 text-xs font-medium">Average Rating</p>
+                                <p className="text-2xl font-bold text-slate-800 mt-1">{averageRating}</p>
                             </div>
-                            <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
-                                <Star className="text-amber-500 fill-amber-500" size={20} />
+                            <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
+                                <Star className="text-amber-500 fill-amber-500" size={16} />
                             </div>
                         </div>
                     </div>
 
-                    {/* Rating Distribution - 3/5 */}
-                    <div className="lg:col-span-3 bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                        <h3 className="text-slate-800 font-semibold flex items-center gap-2 mb-4">
-                            <div className="w-1 h-5 bg-emerald-500 rounded-full"></div>
+                    {/* Rating Distribution - 3/5 - Compact */}
+                    <div className="lg:col-span-3 bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                        <h3 className="text-slate-800 text-sm font-semibold flex items-center gap-2 mb-2">
+                            <div className="w-1 h-4 bg-emerald-500 rounded-full"></div>
                             Rating Distribution
                         </h3>
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                             {[5, 4, 3, 2, 1].map((star, idx) => (
-                                <div key={star} className="flex items-center gap-3">
-                                    <span className="text-sm text-slate-600 w-14">{star} stars</span>
-                                    <div className="flex-1 h-5 bg-slate-100 rounded-full overflow-hidden">
+                                <div key={star} className="flex items-center gap-2">
+                                    <span className="text-xs text-slate-600 w-12">{star} stars</span>
+                                    <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
                                         <div
                                             className={`h-full rounded-full transition-all duration-500 ${star === 5 ? "bg-emerald-500" :
-                                                    star === 4 ? "bg-emerald-400" :
-                                                        star === 3 ? "bg-amber-400" :
-                                                            star === 2 ? "bg-orange-400" :
-                                                                "bg-red-400"
+                                                star === 4 ? "bg-emerald-400" :
+                                                    star === 3 ? "bg-amber-400" :
+                                                        star === 2 ? "bg-orange-400" :
+                                                            "bg-red-400"
                                                 }`}
                                             style={{ width: `${maxCount > 0 ? (ratingCounts[idx] / maxCount) * 100 : 0}%` }}
                                         />
                                     </div>
-                                    <span className="text-sm text-slate-500 w-8 text-right">{ratingCounts[idx]}</span>
+                                    <span className="text-xs text-slate-500 w-6 text-right">{ratingCounts[idx]}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
                 </div>
 
-                {/* Filters */}
+                {/* Filters - Enhanced */}
                 <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                         <div className="flex items-center gap-2 text-slate-600">
                             <Filter size={18} />
                             <span className="font-medium">Filters</span>
+                            {hasActiveFilters && (
+                                <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                                    {filteredReviews.length} results
+                                </span>
+                            )}
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
+                            {/* Search Input */}
                             <div className="relative">
+                                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search reviews..."
+                                    value={searchText}
+                                    onChange={(e) => setSearchText(e.target.value)}
+                                    className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 w-48"
+                                />
+                            </div>
+
+                            {/* Date Range Filter */}
+                            <div className="relative">
+                                <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                <select
+                                    value={filterDateRange}
+                                    onChange={(e) => setFilterDateRange(e.target.value)}
+                                    className="appearance-none bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-10 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                >
+                                    <option value="all">All Time</option>
+                                    <option value="today">Today</option>
+                                    <option value="week">Last 7 Days</option>
+                                    <option value="month">Last 30 Days</option>
+                                </select>
+                                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                            </div>
+
+                            {/* Rating Filter */}
+                            <div className="relative">
+                                <Star size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                                 <select
                                     value={filterRating || ""}
                                     onChange={(e) => setFilterRating(e.target.value ? Number(e.target.value) : null)}
-                                    className="appearance-none bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 pr-10 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    className="appearance-none bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-10 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                 >
                                     <option value="">All Ratings</option>
                                     <option value="5">5 Stars</option>
@@ -206,6 +327,19 @@ export default function AdminDashboard() {
                                 </select>
                                 <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                             </div>
+
+                            {/* Clear Filters */}
+                            {hasActiveFilters && (
+                                <button
+                                    onClick={clearFilters}
+                                    className="flex items-center gap-1 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                >
+                                    <X size={16} />
+                                    Clear
+                                </button>
+                            )}
+
+                            {/* Refresh Button */}
                             <button
                                 onClick={fetchReviews}
                                 className="p-2 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
@@ -235,7 +369,15 @@ export default function AdminDashboard() {
                     ) : filteredReviews.length === 0 ? (
                         <div className="text-center py-20 text-slate-400">
                             <MessageSquare size={48} className="mx-auto mb-4 opacity-50" />
-                            <p>No reviews found</p>
+                            <p>{hasActiveFilters ? "No reviews match your filters" : "No reviews found"}</p>
+                            {hasActiveFilters && (
+                                <button
+                                    onClick={clearFilters}
+                                    className="mt-3 text-sm text-emerald-600 hover:underline"
+                                >
+                                    Clear all filters
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <table className="w-full">
