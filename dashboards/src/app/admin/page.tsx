@@ -125,9 +125,9 @@ export default function AdminDashboard() {
             </header>
 
             <div className="max-w-7xl mx-auto space-y-6">
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Total Reviews */}
+                {/* Stats + Chart Row - 1/5 + 1/5 + 3/5 ratio */}
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+                    {/* Total Reviews - 1/5 */}
                     <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                         <div className="flex items-start justify-between">
                             <div>
@@ -135,13 +135,13 @@ export default function AdminDashboard() {
                                 <p className="text-4xl font-bold text-slate-800 mt-2">{total}</p>
                                 <p className="text-slate-400 text-sm mt-1">All time submissions</p>
                             </div>
-                            <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
-                                <MessageSquare className="text-emerald-500" size={24} />
+                            <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
+                                <MessageSquare className="text-emerald-500" size={20} />
                             </div>
                         </div>
                     </div>
 
-                    {/* Average Rating */}
+                    {/* Average Rating - 1/5 */}
                     <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                         <div className="flex items-start justify-between">
                             <div>
@@ -149,37 +149,37 @@ export default function AdminDashboard() {
                                 <p className="text-4xl font-bold text-slate-800 mt-2">{averageRating}</p>
                                 <p className="text-slate-400 text-sm mt-1">Out of 5 stars</p>
                             </div>
-                            <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center">
-                                <Star className="text-amber-500 fill-amber-500" size={24} />
+                            <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+                                <Star className="text-amber-500 fill-amber-500" size={20} />
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Rating Distribution */}
-                <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                    <h3 className="text-slate-800 font-semibold flex items-center gap-2 mb-6">
-                        <div className="w-1 h-5 bg-emerald-500 rounded-full"></div>
-                        Rating Distribution
-                    </h3>
-                    <div className="space-y-4">
-                        {[5, 4, 3, 2, 1].map((star, idx) => (
-                            <div key={star} className="flex items-center gap-4">
-                                <span className="text-sm text-slate-600 w-16">{star} stars</span>
-                                <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full rounded-full transition-all duration-500 ${star === 5 ? "bg-emerald-500" :
-                                                star === 4 ? "bg-emerald-400" :
-                                                    star === 3 ? "bg-amber-400" :
-                                                        star === 2 ? "bg-orange-400" :
-                                                            "bg-red-400"
-                                            }`}
-                                        style={{ width: `${(ratingCounts[idx] / maxCount) * 100}%` }}
-                                    />
+                    {/* Rating Distribution - 3/5 */}
+                    <div className="lg:col-span-3 bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                        <h3 className="text-slate-800 font-semibold flex items-center gap-2 mb-4">
+                            <div className="w-1 h-5 bg-emerald-500 rounded-full"></div>
+                            Rating Distribution
+                        </h3>
+                        <div className="space-y-2">
+                            {[5, 4, 3, 2, 1].map((star, idx) => (
+                                <div key={star} className="flex items-center gap-3">
+                                    <span className="text-sm text-slate-600 w-14">{star} stars</span>
+                                    <div className="flex-1 h-5 bg-slate-100 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-500 ${star === 5 ? "bg-emerald-500" :
+                                                    star === 4 ? "bg-emerald-400" :
+                                                        star === 3 ? "bg-amber-400" :
+                                                            star === 2 ? "bg-orange-400" :
+                                                                "bg-red-400"
+                                                }`}
+                                            style={{ width: `${maxCount > 0 ? (ratingCounts[idx] / maxCount) * 100 : 0}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-sm text-slate-500 w-8 text-right">{ratingCounts[idx]}</span>
                                 </div>
-                                <span className="text-sm text-slate-500 w-12 text-right">{ratingCounts[idx]}</span>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
 
