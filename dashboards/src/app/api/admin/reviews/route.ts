@@ -23,6 +23,13 @@ export async function GET(): Promise<NextResponse<AdminReviewsResponse>> {
     try {
         const supabase = createServerClient();
 
+        if (!supabase) {
+            return NextResponse.json(
+                { reviews: [], total: 0, status: "error", message: "Database not configured" },
+                { status: 503 }
+            );
+        }
+
         const { data, error, count } = await supabase
             .from("reviews")
             .select("*", { count: "exact" })

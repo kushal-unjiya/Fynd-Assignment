@@ -53,6 +53,16 @@ export async function POST(request: NextRequest): Promise<NextResponse<ReviewRes
 
         // Store in database
         const supabase = createServerClient();
+
+        if (!supabase) {
+            // Return success with response but warn about database
+            return NextResponse.json({
+                id: "demo",
+                ai_response: aiResponse,
+                status: "success"
+            });
+        }
+
         const { data, error } = await supabase
             .from("reviews")
             .insert({

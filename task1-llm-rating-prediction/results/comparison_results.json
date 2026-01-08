@@ -1,0 +1,200 @@
+{
+  "timestamp": "2026-01-08T00:09:47.482204",
+  "model": "google/gemini-2.0-flash-exp:free",
+  "summary": {
+    "zero_shot": {
+      "exact_accuracy": 0.2,
+      "within_1_accuracy": 0.6,
+      "json_validity_rate": 1.0,
+      "avg_response_time": 0.0,
+      "total_samples": 10,
+      "valid_predictions": 10,
+      "exact_matches": 2,
+      "within_1_matches": 6,
+      "per_class_accuracy": {
+        "1": 0.0,
+        "2": 0.0,
+        "3": 1.0,
+        "4": 0.0,
+        "5": 0.0
+      }
+    },
+    "few_shot": {
+      "exact_accuracy": 0.2,
+      "within_1_accuracy": 0.6,
+      "json_validity_rate": 1.0,
+      "avg_response_time": 0.0,
+      "total_samples": 10,
+      "valid_predictions": 10,
+      "exact_matches": 2,
+      "within_1_matches": 6,
+      "per_class_accuracy": {
+        "1": 0.0,
+        "2": 0.0,
+        "3": 1.0,
+        "4": 0.0,
+        "5": 0.0
+      }
+    },
+    "chain_of_thought": {
+      "exact_accuracy": 0.2,
+      "within_1_accuracy": 0.6,
+      "json_validity_rate": 1.0,
+      "avg_response_time": 0.0,
+      "total_samples": 10,
+      "valid_predictions": 10,
+      "exact_matches": 2,
+      "within_1_matches": 6,
+      "per_class_accuracy": {
+        "1": 0.0,
+        "2": 0.0,
+        "3": 1.0,
+        "4": 0.0,
+        "5": 0.0
+      }
+    }
+  },
+  "sample_predictions": {
+    "zero_shot": [
+      {
+        "predicted_stars": 3,
+        "explanation": "DRY RUN - no API call made",
+        "response_time": 0.0,
+        "json_valid": true,
+        "raw_response": "DRY RUN",
+        "actual_stars": 5,
+        "review_id": "HeojLizkqjubh7JCduMipg"
+      },
+      {
+        "predicted_stars": 3,
+        "explanation": "DRY RUN - no API call made",
+        "response_time": 0.0,
+        "json_valid": true,
+        "raw_response": "DRY RUN",
+        "actual_stars": 1,
+        "review_id": "s0dRHCNMgMjDdlvG6XZ66Q"
+      },
+      {
+        "predicted_stars": 3,
+        "explanation": "DRY RUN - no API call made",
+        "response_time": 0.0,
+        "json_valid": true,
+        "raw_response": "DRY RUN",
+        "actual_stars": 3,
+        "review_id": "iKrrAL_IIdM4rsxJexg_iA"
+      },
+      {
+        "predicted_stars": 3,
+        "explanation": "DRY RUN - no API call made",
+        "response_time": 0.0,
+        "json_valid": true,
+        "raw_response": "DRY RUN",
+        "actual_stars": 1,
+        "review_id": "h_y-oqC4xEECVeB09nQ8ZQ"
+      },
+      {
+        "predicted_stars": 3,
+        "explanation": "DRY RUN - no API call made",
+        "response_time": 0.0,
+        "json_valid": true,
+        "raw_response": "DRY RUN",
+        "actual_stars": 4,
+        "review_id": "BpKazDy9V-ITVR5vJfqqog"
+      }
+    ],
+    "few_shot": [
+      {
+        "predicted_stars": 3,
+        "explanation": "DRY RUN - no API call made",
+        "response_time": 0.0,
+        "json_valid": true,
+        "raw_response": "DRY RUN",
+        "actual_stars": 5,
+        "review_id": "HeojLizkqjubh7JCduMipg"
+      },
+      {
+        "predicted_stars": 3,
+        "explanation": "DRY RUN - no API call made",
+        "response_time": 0.0,
+        "json_valid": true,
+        "raw_response": "DRY RUN",
+        "actual_stars": 1,
+        "review_id": "s0dRHCNMgMjDdlvG6XZ66Q"
+      },
+      {
+        "predicted_stars": 3,
+        "explanation": "DRY RUN - no API call made",
+        "response_time": 0.0,
+        "json_valid": true,
+        "raw_response": "DRY RUN",
+        "actual_stars": 3,
+        "review_id": "iKrrAL_IIdM4rsxJexg_iA"
+      },
+      {
+        "predicted_stars": 3,
+        "explanation": "DRY RUN - no API call made",
+        "response_time": 0.0,
+        "json_valid": true,
+        "raw_response": "DRY RUN",
+        "actual_stars": 1,
+        "review_id": "h_y-oqC4xEECVeB09nQ8ZQ"
+      },
+      {
+        "predicted_stars": 3,
+        "explanation": "DRY RUN - no API call made",
+        "response_time": 0.0,
+        "json_valid": true,
+        "raw_response": "DRY RUN",
+        "actual_stars": 4,
+        "review_id": "BpKazDy9V-ITVR5vJfqqog"
+      }
+    ],
+    "chain_of_thought": [
+      {
+        "predicted_stars": 3,
+        "explanation": "DRY RUN - no API call made",
+        "response_time": 0.0,
+        "json_valid": true,
+        "raw_response": "DRY RUN",
+        "actual_stars": 5,
+        "review_id": "HeojLizkqjubh7JCduMipg"
+      },
+      {
+        "predicted_stars": 3,
+        "explanation": "DRY RUN - no API call made",
+        "response_time": 0.0,
+        "json_valid": true,
+        "raw_response": "DRY RUN",
+        "actual_stars": 1,
+        "review_id": "s0dRHCNMgMjDdlvG6XZ66Q"
+      },
+      {
+        "predicted_stars": 3,
+        "explanation": "DRY RUN - no API call made",
+        "response_time": 0.0,
+        "json_valid": true,
+        "raw_response": "DRY RUN",
+        "actual_stars": 3,
+        "review_id": "iKrrAL_IIdM4rsxJexg_iA"
+      },
+      {
+        "predicted_stars": 3,
+        "explanation": "DRY RUN - no API call made",
+        "response_time": 0.0,
+        "json_valid": true,
+        "raw_response": "DRY RUN",
+        "actual_stars": 1,
+        "review_id": "h_y-oqC4xEECVeB09nQ8ZQ"
+      },
+      {
+        "predicted_stars": 3,
+        "explanation": "DRY RUN - no API call made",
+        "response_time": 0.0,
+        "json_valid": true,
+        "raw_response": "DRY RUN",
+        "actual_stars": 4,
+        "review_id": "BpKazDy9V-ITVR5vJfqqog"
+      }
+    ]
+  }
+}
