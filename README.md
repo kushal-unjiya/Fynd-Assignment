@@ -1,6 +1,6 @@
 # Fynd AI Intern Assessment 2.0
 
-> **Candidate:** [Your Name]  
+> **Candidate:** Kushal Unjiya 
 > **Date:** January 9, 2026  
 > **Status:** Implementation Complete | Deployment In Progress
 
@@ -15,11 +15,11 @@
 - **[Technical Report](./REPORT.md)** - Comprehensive project report
 
 ### 🚀 Deployed Applications
-- **User Dashboard:** `[TO BE DEPLOYED]`
-- **Admin Dashboard:** `[TO BE DEPLOYED]`
+- **User Dashboard:** `https://fynd-review.vercel.app/`
+- **Admin Dashboard:** `[(https://fynd-review.vercel.app/)]`
 
 ### 📂 GitHub Repository
-- **Repository:** `[https://github.com/[username]/Fynd-Assignment]`
+- **Repository:** `[(https://github.com/kushal-unjiya/Fynd-Assignment/)]`
 
 ---
 
