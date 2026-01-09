@@ -16,7 +16,7 @@
 
 ### 🚀 Deployed Applications
 - **User Dashboard:** `https://fynd-review.vercel.app/`
-- **Admin Dashboard:** `[(https://fynd-review.vercel.app/)]`
+- **Admin Dashboard:** `https://fynd-review.vercel.app/admin`
 
 ### 📂 GitHub Repository
 - **Repository:** `[(https://github.com/kushal-unjiya/Fynd-Assignment/)]`
