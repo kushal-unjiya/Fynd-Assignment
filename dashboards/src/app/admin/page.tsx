@@ -16,6 +16,7 @@ import {
     Clock,
     Bot,
     TrendingUp,
+    Loader2,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -23,6 +24,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card } from "@/components/ui/card";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 import {
     Dialog,
     DialogContent,
@@ -251,7 +261,6 @@ export default function AdminDashboard() {
                         <Button variant="ghost" size="sm" asChild>
                             <Link href="/">← User View</Link>
                         </Button>
-                        <ThemeSwitcher />
                     </div>
                 </div>
             </header>
@@ -269,8 +278,8 @@ export default function AdminDashboard() {
                             <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
                                 <MessageSquare className="text-emerald-500" size={24} />
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
 
                     {/* Average Rating */}
                     <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
@@ -372,13 +381,11 @@ export default function AdminDashboard() {
                                     className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
                                 />
                                 <select
-                                    value={filterRating || ""}
-                                    onChange={(e) =>
-                                        setFilterRating(e.target.value ? Number(e.target.value) : null)
-                                    }
+                                    value={filterRating}
+                                    onChange={(e) => setFilterRating(e.target.value)}
                                     className="appearance-none bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-10 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                 >
-                                    <option value="">All Ratings</option>
+                                    <option value="all">All Ratings</option>
                                     <option value="5">5 Stars</option>
                                     <option value="4">4 Stars</option>
                                     <option value="3">3 Stars</option>
@@ -391,20 +398,31 @@ export default function AdminDashboard() {
                                 />
                             </div>
 
-                                {hasActiveFilters && (
-                                    <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 text-destructive hover:text-destructive hover:bg-destructive/10">
-                                        <X size={14} />
-                                        Clear
-                                    </Button>
-                                )}
-
-                                <Button variant="outline" size="icon" onClick={fetchReviews} className="h-9 w-9">
-                                    <RefreshCw size={14} />
+                            {/* Clear Filters */}
+                            {hasActiveFilters && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={clearFilters}
+                                    className="h-9 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                >
+                                    <X size={14} />
+                                    Clear
                                 </Button>
-                            </div>
+                            )}
+
+                            {/* Refresh Button */}
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={fetchReviews}
+                                className="h-9 w-9"
+                            >
+                                <RefreshCw size={14} />
+                            </Button>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
                 {/* Reviews Table */}
                 <Card className="shadow-sm border-border/50 overflow-hidden">
@@ -474,7 +492,7 @@ export default function AdminDashboard() {
                         </Table>
                     )}
                 </Card>
-            </main>
+            </div>
 
             {/* Review Detail Dialog */}
             <Dialog open={!!selectedReview} onOpenChange={(open) => !open && setSelectedReview(null)}>
