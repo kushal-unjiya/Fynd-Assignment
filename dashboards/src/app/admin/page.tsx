@@ -2,7 +2,34 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { MessageSquare, Star, RefreshCw, Filter, Eye, ChevronDown, Calendar, Search, X, Pause } from "lucide-react";
+import {
+    MessageSquare,
+    Star,
+    RefreshCw,
+    Filter,
+    Eye,
+    ChevronDown,
+    Calendar,
+    Search,
+    X,
+    Pause,
+    Clock,
+    Bot,
+    TrendingUp,
+} from "lucide-react";
+
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
 
 interface Review {
     id: string;
@@ -191,7 +218,7 @@ export default function AdminDashboard() {
             <header className="max-w-7xl mx-auto mb-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-slate-800">
+                        <h1 className="text-2xl md:text-3xl font-bold text-shadow-slate-600">
                             Feedback Dashboard
                         </h1>
                         <p className="text-slate-500 mt-1">
@@ -237,8 +264,6 @@ export default function AdminDashboard() {
                             </div>
                             <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
                                 <MessageSquare className="text-emerald-500" size={24} />
-                            <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
-                                <MessageSquare className="text-emerald-500" size={16} />
                             </div>
                         </div>
                     </div>
@@ -246,9 +271,6 @@ export default function AdminDashboard() {
                     {/* Average Rating */}
                     <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                         <div className="flex items-start justify-between">
-                    {/* Average Rating - 1/5 */}
-                    <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-                        <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-slate-500 text-xs font-medium">Average Rating</p>
                                 <p className="text-2xl font-bold text-slate-800 mt-1">{averageRating}</p>
@@ -259,16 +281,11 @@ export default function AdminDashboard() {
                         </div>
                     </div>
                 </div>
-                            <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
-                                <Star className="text-amber-500 fill-amber-500" size={16} />
-                            </div>
-                        </div>
-                    </div>
 
                 {/* Rating Distribution */}
                 <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                     <h3 className="text-slate-800 font-semibold flex items-center gap-2 mb-6">
-                        <div className="w-1 h-5 bg-emerald-500 rounded-full"></div>
+                        <div className="w-1 h-5 bg-emerald-500 rounded-full" />
                         Rating Distribution
                     </h3>
                     <div className="space-y-4">
@@ -277,43 +294,20 @@ export default function AdminDashboard() {
                                 <span className="text-sm text-slate-600 w-16">{star} stars</span>
                                 <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
                                     <div
-                                        className={`h-full rounded-full transition-all duration-500 ${star === 5 ? "bg-emerald-500" :
-                                                star === 4 ? "bg-emerald-400" :
-                                                    star === 3 ? "bg-amber-400" :
-                                                        star === 2 ? "bg-orange-400" :
-                                                            "bg-red-400"
-                                            }`}
-                                        style={{ width: `${(ratingCounts[idx] / maxCount) * 100}%` }}
+                                        className={cn(
+                                            "h-full rounded-full transition-all duration-500",
+                                            getRatingColor(star)
+                                        )}
+                                        style={{
+                                            width: `${maxCount > 0 ? (ratingCounts[idx] / maxCount) * 100 : 0}%`,
+                                        }}
                                     />
                                 </div>
-                                <span className="text-sm text-slate-500 w-12 text-right">{ratingCounts[idx]}</span>
+                                <span className="text-sm text-slate-500 w-12 text-right">
+                                    {ratingCounts[idx]}
+                                </span>
                             </div>
                         ))}
-                    {/* Rating Distribution - 3/5 - Compact */}
-                    <div className="lg:col-span-3 bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-                        <h3 className="text-slate-800 text-sm font-semibold flex items-center gap-2 mb-2">
-                            <div className="w-1 h-4 bg-emerald-500 rounded-full"></div>
-                            Rating Distribution
-                        </h3>
-                        <div className="space-y-1">
-                            {[5, 4, 3, 2, 1].map((star, idx) => (
-                                <div key={star} className="flex items-center gap-2">
-                                    <span className="text-xs text-slate-600 w-12">{star} stars</span>
-                                    <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full rounded-full transition-all duration-500 ${star === 5 ? "bg-emerald-500" :
-                                                star === 4 ? "bg-emerald-400" :
-                                                    star === 3 ? "bg-amber-400" :
-                                                        star === 2 ? "bg-orange-400" :
-                                                            "bg-red-400"
-                                                }`}
-                                            style={{ width: `${maxCount > 0 ? (ratingCounts[idx] / maxCount) * 100 : 0}%` }}
-                                        />
-                                    </div>
-                                    <span className="text-xs text-slate-500 w-6 text-right">{ratingCounts[idx]}</span>
-                                </div>
-                            ))}
-                        </div>
                     </div>
                 </div>
 
@@ -332,7 +326,10 @@ export default function AdminDashboard() {
                         <div className="flex flex-wrap items-center gap-3">
                             {/* Search Input */}
                             <div className="relative">
-                                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <Search
+                                    size={16}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                />
                                 <input
                                     type="text"
                                     placeholder="Search reviews..."
@@ -344,7 +341,10 @@ export default function AdminDashboard() {
 
                             {/* Date Range Filter */}
                             <div className="relative">
-                                <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                <Calendar
+                                    size={16}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                                />
                                 <select
                                     value={filterDateRange}
                                     onChange={(e) => setFilterDateRange(e.target.value)}
@@ -355,15 +355,23 @@ export default function AdminDashboard() {
                                     <option value="week">Last 7 Days</option>
                                     <option value="month">Last 30 Days</option>
                                 </select>
-                                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                <ChevronDown
+                                    size={16}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                                />
                             </div>
 
                             {/* Rating Filter */}
                             <div className="relative">
-                                <Star size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                <Star
+                                    size={16}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                                />
                                 <select
                                     value={filterRating || ""}
-                                    onChange={(e) => setFilterRating(e.target.value ? Number(e.target.value) : null)}
+                                    onChange={(e) =>
+                                        setFilterRating(e.target.value ? Number(e.target.value) : null)
+                                    }
                                     className="appearance-none bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-10 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                 >
                                     <option value="">All Ratings</option>
@@ -373,7 +381,10 @@ export default function AdminDashboard() {
                                     <option value="2">2 Stars</option>
                                     <option value="1">1 Star</option>
                                 </select>
-                                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                                <ChevronDown
+                                    size={16}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                                />
                             </div>
 
                             {/* Clear Filters */}
@@ -395,8 +406,8 @@ export default function AdminDashboard() {
                                 <RefreshCw size={18} className="text-slate-600" />
                             </button>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
                 {/* Reviews Table */}
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">

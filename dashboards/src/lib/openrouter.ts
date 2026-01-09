@@ -71,9 +71,9 @@ Generate an appropriate response based on the guidelines in your system prompt.`
         return `We're truly sorry to hear about your experience, and we understand your frustration. 💔 This is not the standard we hold ourselves to.
 
 Please let us connect you with our support team:
-📞 Call: 1800-XXX-XXXX (24/7)
+📞 Call: 1800-1234567890 (24/7)
 📧 Email: support@fynd.com
-💬 WhatsApp: +91-XXXXXXXXXX
+💬 WhatsApp: +91-1234567890
 
 We're committed to making this right for you. 🙏`;
     }

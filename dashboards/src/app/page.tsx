@@ -2,6 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Star, Loader2, ArrowRight, Bot, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
 export default function UserDashboard() {
   const [rating, setRating] = useState(0);
@@ -47,9 +54,11 @@ export default function UserDashboard() {
       } else {
         setAiResponse(data.ai_response);
         setSuccess(true);
-        // Reset form
+        // Reset form but keep rating for visual feedback? 
+        // No, let's reset it.
         setRating(0);
         setReviewText("");
+        setHoverRating(0);
       }
     } catch (err) {
       setError("Network error. Please try again.");
@@ -64,133 +73,148 @@ export default function UserDashboard() {
       <button
         key={star}
         type="button"
-        className={`star ${(hoverRating || rating) >= star ? "filled" : "empty"}`}
+        className={cn(
+          "transition-all duration-200 hover:scale-110 focus:outline-none",
+          (hoverRating || rating) >= star ? "text-amber-400" : "text-muted-foreground/30"
+        )}
         onClick={() => setRating(star)}
         onMouseEnter={() => setHoverRating(star)}
         onMouseLeave={() => setHoverRating(0)}
         aria-label={`Rate ${star} stars`}
       >
-        ★
+        <Star
+          className={cn(
+            "w-10 h-10",
+            (hoverRating || rating) >= star ? "fill-current" : "fill-none"
+          )}
+        />
       </button>
     ));
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background">
       {/* Header */}
-      <header className="w-full max-w-2xl mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-              Share Your Feedback
-            </h1>
-            <p className="text-muted mt-2">We value your opinion</p>
-          </div>
-          <Link
-            href="/admin"
-            className="text-sm text-muted hover:text-foreground transition-colors"
-          >
-            Admin Dashboard →
-          </Link>
+      <header className="w-full max-w-2xl mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-500 bg-clip-text text-transparent">
+            Share Your Feedback
+          </h1>
+          <p className="text-muted-foreground mt-2">We value your opinion and use AI to improve our services.</p>
         </div>
+        <Button variant="ghost" asChild>
+          <Link href="/admin" className="gap-2">
+            Admin <ArrowRight className="w-4 h-4" />
+          </Link>
+        </Button>
       </header>
 
       {/* Main Form */}
       <main className="w-full max-w-2xl">
-        <form onSubmit={handleSubmit} className="glass rounded-2xl p-8 space-y-8">
-          {/* Star Rating */}
-          <div className="text-center">
-            <label className="block text-lg font-medium mb-4">
-              How would you rate your experience?
-            </label>
-            <div className="flex justify-center gap-2">
-              {renderStars()}
-            </div>
-            {rating > 0 && (
-              <p className="mt-3 text-muted">
-                {rating === 5 && "Excellent! 🌟"}
-                {rating === 4 && "Great! 😊"}
-                {rating === 3 && "Good 👍"}
-                {rating === 2 && "Fair 😐"}
-                {rating === 1 && "Poor 😞"}
-              </p>
-            )}
-          </div>
+        <Card className="border-border/40 bg-background/60 backdrop-blur-xl shadow-2xl">
+          <form onSubmit={handleSubmit}>
+            <CardHeader className="text-center">
+              <CardTitle className="text-xl">How was your experience?</CardTitle>
+              <CardDescription>Select a rating and tell us what you think.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              {/* Star Rating */}
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex justify-center gap-2">
+                  {renderStars()}
+                </div>
+                {rating > 0 && (
+                  <p className="text-sm font-medium animate-in fade-in slide-in-from-bottom-2">
+                    {rating === 5 && "Excellent! 🌟"}
+                    {rating === 4 && "Great! 😊"}
+                    {rating === 3 && "Good 👍"}
+                    {rating === 2 && "Fair 😐"}
+                    {rating === 1 && "Poor 😞"}
+                  </p>
+                )}
+              </div>
 
-          {/* Review Text */}
-          <div>
-            <label htmlFor="review" className="block text-lg font-medium mb-3">
-              Tell us more
-            </label>
-            <textarea
-              id="review"
-              value={reviewText}
-              onChange={(e) => setReviewText(e.target.value)}
-              placeholder="Share your experience with us..."
-              className="w-full h-40 px-4 py-3 bg-background/50 border border-border rounded-xl 
-                         focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary
-                         placeholder:text-muted resize-none transition-all"
-              maxLength={5000}
-            />
-            <div className="flex justify-between mt-2 text-sm text-muted">
-              <span>Minimum 10 characters</span>
-              <span>{reviewText.length}/5000</span>
-            </div>
-          </div>
+              {/* Review Text */}
+              <div className="space-y-3">
+                <Label htmlFor="review" className="text-base">Tell us more</Label>
+                <Textarea
+                  id="review"
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  placeholder="Share your experience with us..."
+                  className="min-h-[160px] bg-background/50 resize-none border-border/50 focus:border-primary/50 transition-all"
+                  maxLength={5000}
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Minimum 10 characters</span>
+                  <span className={cn(reviewText.length > 0 && reviewText.length < 10 ? "text-destructive" : "")}>
+                    {reviewText.length}/5000
+                  </span>
+                </div>
+              </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="p-4 bg-danger/10 border border-danger/30 rounded-xl text-danger text-center">
-              {error}
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="btn-primary w-full py-4 rounded-xl font-semibold text-white
-                       flex items-center justify-center gap-3"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="spinner"></div>
-                Submitting...
-              </>
-            ) : (
-              "Submit Feedback"
-            )}
-          </button>
-        </form>
+              {/* Error Message */}
+              {error && (
+                <Alert variant="destructive" className="bg-destructive/10 border-destructive/20">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+            <CardFooter>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-12 text-base font-semibold transition-all hover:shadow-[0_0_20px_rgba(var(--primary),0.3)]"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Feedback"
+                )}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
 
         {/* AI Response */}
         {aiResponse && (
-          <div className="ai-response mt-8 glass rounded-2xl p-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-purple-500 
-                              flex items-center justify-center text-xl">
-                🤖
+          <Card className="mt-8 border-primary/20 bg-primary/5 backdrop-blur-sm animate-in fade-in slide-in-from-top-4 duration-500">
+            <CardHeader className="flex flex-row items-center gap-4 pb-2">
+              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                <Bot className="w-6 h-6 text-primary-foreground" />
               </div>
-              <div>
-                <h3 className="font-semibold">AI Response</h3>
-                <p className="text-sm text-muted">Thank you for your feedback!</p>
+              <div className="flex-1">
+                <CardTitle className="text-lg">AI Response</CardTitle>
+                <CardDescription>Thank you for your feedback!</CardDescription>
               </div>
-            </div>
-            <p className="text-foreground/90 leading-relaxed">{aiResponse}</p>
+              {success && (
+                <CheckCircle2 className="w-6 h-6 text-success" />
+              )}
+            </CardHeader>
+            <CardContent>
+              <p className="text-foreground/90 leading-relaxed italic whitespace-pre-line">
+                "{aiResponse}"
+              </p>
+            </CardContent>
             {success && (
-              <div className="mt-6 p-4 bg-secondary/10 border border-secondary/30 rounded-xl 
-                              text-secondary text-center flex items-center justify-center gap-2">
-                <span>✓</span> Review submitted successfully!
-              </div>
+              <CardFooter className="pt-0">
+                <div className="w-full py-2 px-4 bg-success/10 border border-success/20 rounded-lg text-success text-center text-sm font-medium">
+                  Review submitted successfully!
+                </div>
+              </CardFooter>
             )}
-          </div>
+          </Card>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="mt-12 text-center text-muted text-sm">
-        <p>Fynd AI Feedback System</p>
+      <footer className="mt-12 text-center text-muted-foreground text-xs">
+        <p>© 2026 Fynd AI Feedback System · Built with Shadcn UI</p>
       </footer>
     </div>
   );
 }
+
