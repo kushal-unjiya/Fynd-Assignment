@@ -19,21 +19,19 @@ from prompts import get_step1_prompt, get_step2_prompt, get_step3_prompt
 
 # --- Config ---
 load_dotenv()
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
-OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
-# MODEL_NAME = "meta-llama/llama-3.2-3b-instruct:free"
-MODEL_NAME = "nex-agi/deepseek-v3.1-nex-n1:free"
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+GROQ_BASE_URL = "https://api.groq.com/openai/v1/chat/completions"
+MODEL_NAME = "moonshotai/kimi-k2-instruct-0905"
 
 # --- Predictor ---
 def call_llm(system_prompt, user_prompt):
-    """Make API call to OpenRouter with retries."""
-    if not OPENROUTER_API_KEY:
-        raise ValueError("OPENROUTER_API_KEY environment variable not set")
+    """Make API call to Groq with retries."""
+    if not GROQ_API_KEY:
+        raise ValueError("GROQ_API_KEY environment variable not set")
         
     headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://github.com/your-repo", # Optional
     }
     
     payload = {
@@ -49,7 +47,7 @@ def call_llm(system_prompt, user_prompt):
     
     for attempt in range(5): # Increased to 5 attempts
         try:
-            response = requests.post(OPENROUTER_BASE_URL, headers=headers, json=payload, timeout=30)
+            response = requests.post(GROQ_BASE_URL, headers=headers, json=payload, timeout=30)
             if response.status_code == 200:
                 response_json = response.json()
                 if 'error' in response_json:
@@ -177,8 +175,8 @@ def main():
     parser.add_argument("--sample", type=int, default=None, help="Sample size")
     args = parser.parse_args()
 
-    if not OPENROUTER_API_KEY:
-        print("WARNING: OPENROUTER_API_KEY not set. API calls will fail.")
+    if not GROQ_API_KEY:
+        print("WARNING: GROQ_API_KEY not set. API calls will fail.")
     
     print(f"Loading {args.input}...")
     try:
