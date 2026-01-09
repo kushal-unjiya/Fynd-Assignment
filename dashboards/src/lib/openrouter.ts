@@ -83,26 +83,39 @@ We're committed to making this right for you. 🙏`;
 
 // Generate admin summary with structured insights
 export async function generateAdminSummary(rating: number, reviewText: string): Promise<string> {
-    const urgencyLevel = rating <= 2 ? 'HIGH' : rating === 3 ? 'MEDIUM' : 'LOW';
-    const sentiment = rating <= 2 ? 'Negative' : rating === 3 ? 'Neutral' : 'Positive';
+    const urgencyLevel = rating <= 2 ? 'Critical' : rating === 3 ? 'Medium' : 'Low';
+    const expectedSentiment = rating <= 2 ? 'Negative' : rating === 3 ? 'Neutral' : 'Positive';
 
-    const prompt = `Analyze this customer review:
+    const prompt = `IMPORTANT: Read the review text carefully and analyze the actual sentiment expressed!
 
-Rating: ${rating} stars
-Sentiment: ${sentiment}
-Urgency Level: ${urgencyLevel}
 Review Text: "${reviewText}"
+Star Rating: ${rating}/5
 
-Provide a structured analysis following the format in your system prompt.`;
+Based on the REVIEW TEXT (not just the star rating), provide your analysis in the exact format specified in your system prompt.
+
+Remember:
+- If text says "worst/terrible/bad" → Sentiment is NEGATIVE
+- If text says "best/great/amazing" → Sentiment is POSITIVE  
+- If text says "okay/average/fine" → Sentiment is NEUTRAL
+
+Analyze now:`;
 
     const response = await callLLM(prompt, ADMIN_SUMMARY_SYSTEM_PROMPT);
 
     if (response.error || !response.content) {
-        // Enhanced fallback with more detail
-        const category = rating <= 2 ? 'Issue requires attention' :
-            rating === 3 ? 'Mixed feedback - follow up recommended' :
-                'Positive experience - potential brand advocate';
-        return `[${sentiment}] ${urgencyLevel} Priority: ${category}. Review rating: ${rating}/5 stars.`;
+        // Improved fallback with proper formatting
+        const urgency = rating <= 2 ? 'Critical' : rating === 3 ? 'Medium' : 'Low';
+        const category = rating <= 2 ? 'Product Quality' : rating === 3 ? 'Product Quality' : 'Product Quality';
+        
+        return `**Sentiment**: ${expectedSentiment} (high confidence)
+
+**Key Issue(s)**: Customer provided ${rating}-star rating. Review text requires manual review for detailed analysis.
+
+**Category**: ${category}
+
+**Urgency**: ${urgency}
+
+**Customer Expectation**: ${rating <= 2 ? 'Immediate attention and resolution of concerns.' : rating === 3 ? 'Acknowledgment and follow-up to understand specific feedback.' : 'Recognition and continued quality service.'}`;
     }
 
     return response.content;

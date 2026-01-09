@@ -105,8 +105,8 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background">
       {/* Header */}
-      <header className="w-full max-w-2xl mb-8 flex items-center justify-between">
-        <div>
+      <header className="w-full max-w-2xl mb-8 flex flex-col items-center text-center gap-2">
+        <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-500 bg-clip-text text-transparent">
             Share Your Feedback
           </h1>
@@ -114,16 +114,11 @@ export default function UserDashboard() {
             We value your opinion and use AI to improve our services.
           </p>
         </div>
-        <Button variant="ghost" asChild>
-          <Link href="/admin" className="gap-2">
-            Admin <ArrowRight className="w-4 h-4" />
-          </Link>
-        </Button>
       </header>
 
       {/* Main Form */}
-      <main className="w-full max-w-2xl">
-        <Card className="border-border/40 bg-background/60 backdrop-blur-xl shadow-2xl">
+      <main className="w-full max-w-xl sm:max-w-2xl">
+        <Card className="border-border/40 bg-background/60 backdrop-blur-xl shadow-2xl w-full">
           <form onSubmit={handleSubmit}>
             <CardHeader className="text-center">
               <CardTitle className="text-xl">How was your experience?</CardTitle>
@@ -233,8 +228,8 @@ export default function UserDashboard() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-12 text-center text-muted-foreground text-xs">
-        <p>© 2026 Fynd AI Feedback System · Built with Shadcn UI</p>
+      <footer className="mt-12 text-center text-muted-foreground text-xs px-4">
+        <p>© 2026 Fynd AI Feedback System</p>
       </footer>
     </div>
   );

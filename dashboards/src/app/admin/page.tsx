@@ -17,6 +17,7 @@ import {
     Bot,
     TrendingUp,
     Loader2,
+    Trash2,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -85,6 +86,30 @@ export default function AdminDashboard() {
             setNextRefresh(10);
         }
     }, []);
+
+    const handleDeleteReview = async (reviewId: string) => {
+        if (!confirm("Are you sure you want to delete this review? This action cannot be undone.")) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/admin/reviews/${reviewId}`, {
+                method: "DELETE"
+            });
+            const data = await response.json();
+
+            if (data.status === "success") {
+                // Remove the review from the local state
+                setReviews(prev => prev.filter(r => r.id !== reviewId));
+                setTotal(prev => prev - 1);
+            } else {
+                alert("Failed to delete review: " + data.message);
+            }
+        } catch (err) {
+            alert("Network error during deletion");
+            console.error(err);
+        }
+    };
 
     useEffect(() => {
         fetchReviews();
@@ -457,7 +482,7 @@ export default function AdminDashboard() {
                                         <span className="flex items-center gap-1">✨ AI Summary</span>
                                     </TableHead>
                                     <TableHead className="w-28 text-xs">Date</TableHead>
-                                    <TableHead className="w-12"></TableHead>
+                                    <TableHead className="w-20 text-xs text-center">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -477,14 +502,26 @@ export default function AdminDashboard() {
                                         </TableCell>
                                         <TableCell className="text-muted-foreground text-sm">{formatDate(review.created_at)}</TableCell>
                                         <TableCell>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon-sm"
-                                                onClick={() => setSelectedReview(review)}
-                                                className="opacity-50 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <Eye size={14} />
-                                            </Button>
+                                            <div className="flex items-center gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon-sm"
+                                                    onClick={() => setSelectedReview(review)}
+                                                    className="opacity-50 group-hover:opacity-100 transition-opacity"
+                                                    title="View Details"
+                                                >
+                                                    <Eye size={14} />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon-sm"
+                                                    onClick={() => handleDeleteReview(review.id)}
+                                                    className="opacity-50 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                    title="Delete Review"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -496,11 +533,11 @@ export default function AdminDashboard() {
 
             {/* Review Detail Dialog */}
             <Dialog open={!!selectedReview} onOpenChange={(open) => !open && setSelectedReview(null)}>
-                <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
+                <DialogContent className="w-[80vw] max-w-5xl h-[90vh] p-0 flex flex-col">
                     {selectedReview && (
                         <>
-                            <DialogHeader className="p-6 border-b">
-                                <div className="flex items-center justify-between">
+                            <DialogHeader className="p-6 border-b shrink-0">
+                                <div className="flex items-center justify-between gap-4">
                                     <div>
                                         <DialogTitle className="text-xl">Review Details</DialogTitle>
                                         <DialogDescription className="flex items-center gap-2 mt-1">
@@ -511,34 +548,36 @@ export default function AdminDashboard() {
                                 </div>
                             </DialogHeader>
 
-                            <ScrollArea className="flex-1">
+                            <div className="flex-1 overflow-y-auto">
                                 <div className="p-6 space-y-6">
                                     <section>
-                                        <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Customer Feedback</h4>
-                                        <div className="bg-muted/50 p-4 rounded-xl border italic">
-                                            "{selectedReview.review_text}"
+                                        <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
+                                            Customer Feedback
+                                        </h4>
+                                        <div className="bg-muted/50 p-4 rounded-xl border text-sm leading-relaxed whitespace-pre-line wrap-break-word">
+                                            {selectedReview.review_text}
                                         </div>
                                     </section>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                         <section>
                                             <h4 className="text-xs font-bold uppercase tracking-wider text-primary mb-3 flex items-center gap-2">
                                                 <Bot size={14} /> AI Summary
                                             </h4>
-                                            <p className="text-sm leading-relaxed text-foreground/80">
+                                            <div className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line wrap-break-word">
                                                 {selectedReview.ai_summary}
-                                            </p>
+                                            </div>
                                         </section>
 
                                         <section>
                                             <h4 className="text-xs font-bold uppercase tracking-wider text-amber-500 mb-3 flex items-center gap-2">
                                                 <TrendingUp size={14} /> Recommended Actions
                                             </h4>
-                                            <div className="flex flex-wrap gap-2">
+                                            <div className="flex flex-col gap-2">
                                                 {(selectedReview.ai_actions || []).map((action, idx) => (
-                                                    <Badge key={idx} variant="outline" className="bg-amber-500/5 border-amber-500/20 text-amber-500">
+                                                    <div key={idx} className="bg-amber-500/5 border border-amber-500/20 text-amber-500 px-3 py-2 rounded-lg text-xs">
                                                         {action}
-                                                    </Badge>
+                                                    </div>
                                                 ))}
                                             </div>
                                         </section>
@@ -550,14 +589,14 @@ export default function AdminDashboard() {
                                         <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-500 mb-3 flex items-center gap-2">
                                             🤖 AI Response Sent
                                         </h4>
-                                        <div className="bg-emerald-500/5 p-4 rounded-xl border border-emerald-500/10 text-sm leading-relaxed">
+                                        <div className="bg-emerald-500/5 p-4 rounded-xl border border-emerald-500/10 text-sm leading-relaxed whitespace-pre-line wrap-break-word">
                                             {selectedReview.ai_response}
                                         </div>
                                     </section>
                                 </div>
-                            </ScrollArea>
+                            </div>
 
-                            <div className="p-4 border-t bg-muted/20 flex justify-end">
+                            <div className="p-4 border-t bg-muted/20 flex justify-end shrink-0">
                                 <Button onClick={() => setSelectedReview(null)}>Close</Button>
                             </div>
                         </>
@@ -566,9 +605,9 @@ export default function AdminDashboard() {
             </Dialog>
 
             {/* Footer */}
-            <footer className="max-w-7xl mx-auto py-8 text-center" suppressHydrationWarning>
-                <p className="text-xs text-muted-foreground">
-                    Last updated: {lastRefresh.toLocaleTimeString()} · Built with Shadcn UI & Lucide Icons
+            <footer className="max-w-7xl mx-auto py-8 text-center px-4">
+                <p className="text-xs text-muted-foreground" suppressHydrationWarning>
+                    Last updated: {lastRefresh.toLocaleTimeString()}
                 </p>
             </footer>
         </div>
