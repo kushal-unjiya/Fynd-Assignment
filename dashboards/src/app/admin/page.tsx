@@ -2,33 +2,34 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { MessageSquare, Star, RefreshCw, Filter, Eye, Calendar, Search, X, Pause, Loader2, BarChart3 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+    MessageSquare,
+    Star,
+    RefreshCw,
+    Filter,
+    Eye,
+    ChevronDown,
+    Calendar,
+    Search,
+    X,
+    Pause,
+    Clock,
+    Bot,
+    TrendingUp,
+} from "lucide-react";
+
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
 } from "@/components/ui/dialog";
-import { ThemeSwitcher } from "@/components/theme-switcher";
 
 interface Review {
     id: string;
@@ -196,37 +197,38 @@ export default function AdminDashboard() {
                     <Star
                         key={star}
                         size={14}
-                        className={star <= rating ? getStarColor(rating) : "text-muted-foreground/20"}
+                        className={cn(
+                            star <= rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"
+                        )}
                     />
                 ))}
             </div>
         );
     };
 
-    const getRatingBarColor = (star: number) => {
+    const getRatingColor = (star: number) => {
         switch (star) {
-            case 5: return "bg-green-500";
-            case 4: return "bg-lime-500";
-            case 3: return "bg-yellow-500";
-            case 2: return "bg-orange-500";
-            case 1: return "bg-red-500";
-            default: return "bg-primary";
+            case 5: return "bg-emerald-500";
+            case 4: return "bg-emerald-400";
+            case 3: return "bg-amber-400";
+            case 2: return "bg-orange-400";
+            case 1: return "bg-destructive";
+            default: return "bg-muted";
         }
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 transition-colors duration-300">
+        <div className="min-h-screen bg-background p-4 md:p-8 space-y-8">
             {/* Header */}
-            <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
-                <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-6">
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10">
-                            <BarChart3 className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                            <h1 className="text-lg font-semibold text-foreground">Feedback Dashboard</h1>
-                            <p className="text-xs text-muted-foreground">AI-powered insights</p>
-                        </div>
+            <header className="max-w-7xl mx-auto mb-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-bold text-shadow-slate-600">
+                            Feedback Dashboard
+                        </h1>
+                        <p className="text-slate-500 mt-1">
+                            Monitor and analyze user feedback with AI-powered insights
+                        </p>
                     </div>
                     <div className="flex items-center gap-3">
                         <Badge
@@ -254,126 +256,140 @@ export default function AdminDashboard() {
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-6 py-6 space-y-5">
-                {/* Stats Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="max-w-7xl mx-auto space-y-6">
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Total Reviews */}
-                    <Card className="shadow-sm border-border/50 hover:shadow-md transition-shadow">
-                        <CardContent className="py-5">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">Total Reviews</p>
-                                    <p className="text-3xl font-bold text-foreground mt-1 tabular-nums">{total}</p>
-                                </div>
-                                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                                    <MessageSquare className="text-primary" size={18} />
-                                </div>
+                    <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <p className="text-slate-500 text-xs font-medium">Total Reviews</p>
+                                <p className="text-2xl font-bold text-slate-800 mt-1">{total}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+                                <MessageSquare className="text-emerald-500" size={24} />
                             </div>
                         </CardContent>
                     </Card>
 
                     {/* Average Rating */}
-                    <Card className="shadow-sm border-border/50 hover:shadow-md transition-shadow">
-                        <CardContent className="py-5">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">Average Rating</p>
-                                    <div className="flex items-baseline gap-1 mt-1">
-                                        <p className="text-3xl font-bold text-foreground tabular-nums">{averageRating}</p>
-                                        <span className="text-sm text-muted-foreground">/ 5</span>
-                                    </div>
-                                </div>
-                                <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center">
-                                    <Star className="text-amber-500 fill-amber-500" size={18} />
-                                </div>
+                    <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <p className="text-slate-500 text-xs font-medium">Average Rating</p>
+                                <p className="text-2xl font-bold text-slate-800 mt-1">{averageRating}</p>
                             </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Rating Distribution */}
-                    <Card className="lg:col-span-3 shadow-sm border-border/50">
-                        <CardContent className="py-5">
-                            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Rating Distribution</h3>
-                            <div className="space-y-2">
-                                {[5, 4, 3, 2, 1].map((star, idx) => (
-                                    <div key={star} className="flex items-center gap-3">
-                                        <span className="text-xs text-muted-foreground w-4 text-right font-medium">{star}</span>
-                                        <Star size={12} className={getRatingBarColor(star).replace("bg-", "text-")} />
-                                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                                            <div
-                                                className={`h-full rounded-full transition-all duration-500 ${getRatingBarColor(star)}`}
-                                                style={{ width: `${maxCount > 0 ? (ratingCounts[idx] / maxCount) * 100 : 0}%` }}
-                                            />
-                                        </div>
-                                        <span className="text-xs text-muted-foreground w-8 text-right tabular-nums font-medium">
-                                            {ratingCounts[idx]}
-                                        </span>
-                                    </div>
-                                ))}
+                            <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center">
+                                <Star className="text-amber-500 fill-amber-500" size={24} />
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Filters */}
-                <Card className="shadow-sm border-border/50">
-                    <CardContent className="py-4">
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                            <div className="flex items-center gap-2">
-                                <Filter size={16} className="text-muted-foreground" />
-                                <span className="font-medium text-foreground text-sm">Filters</span>
-                                {hasActiveFilters && (
-                                    <Badge variant="default" className="text-xs">
-                                        {filteredReviews.length} results
-                                    </Badge>
-                                )}
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2">
-                                {/* Search Input */}
-                                <div className="relative">
-                                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                                    <Input
-                                        type="text"
-                                        placeholder="Search reviews..."
-                                        value={searchText}
-                                        onChange={(e) => setSearchText(e.target.value)}
-                                        className="pl-9 w-44 h-9 text-sm"
+                {/* Rating Distribution */}
+                <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                    <h3 className="text-slate-800 font-semibold flex items-center gap-2 mb-6">
+                        <div className="w-1 h-5 bg-emerald-500 rounded-full" />
+                        Rating Distribution
+                    </h3>
+                    <div className="space-y-4">
+                        {[5, 4, 3, 2, 1].map((star, idx) => (
+                            <div key={star} className="flex items-center gap-4">
+                                <span className="text-sm text-slate-600 w-16">{star} stars</span>
+                                <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
+                                    <div
+                                        className={cn(
+                                            "h-full rounded-full transition-all duration-500",
+                                            getRatingColor(star)
+                                        )}
+                                        style={{
+                                            width: `${maxCount > 0 ? (ratingCounts[idx] / maxCount) * 100 : 0}%`,
+                                        }}
                                     />
                                 </div>
+                                <span className="text-sm text-slate-500 w-12 text-right">
+                                    {ratingCounts[idx]}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
 
-                                {/* Date Range Filter */}
-                                <div className="relative">
-                                    <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" />
-                                    <Select value={filterDateRange} onValueChange={setFilterDateRange}>
-                                        <SelectTrigger className="pl-9 w-32 h-9 text-sm">
-                                            <SelectValue placeholder="All Time" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All Time</SelectItem>
-                                            <SelectItem value="today">Today</SelectItem>
-                                            <SelectItem value="week">Last 7 Days</SelectItem>
-                                            <SelectItem value="month">Last 30 Days</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                {/* Filters - Enhanced */}
+                <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div className="flex items-center gap-2 text-slate-600">
+                            <Filter size={18} />
+                            <span className="font-medium">Filters</span>
+                            {hasActiveFilters && (
+                                <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                                    {filteredReviews.length} results
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-3">
+                            {/* Search Input */}
+                            <div className="relative">
+                                <Search
+                                    size={16}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Search reviews..."
+                                    value={searchText}
+                                    onChange={(e) => setSearchText(e.target.value)}
+                                    className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 w-48"
+                                />
+                            </div>
 
-                                {/* Rating Filter */}
-                                <div className="relative">
-                                    <Star size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" />
-                                    <Select value={filterRating} onValueChange={setFilterRating}>
-                                        <SelectTrigger className="pl-9 w-28 h-9 text-sm">
-                                            <SelectValue placeholder="Rating" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All</SelectItem>
-                                            <SelectItem value="5">5 Stars</SelectItem>
-                                            <SelectItem value="4">4 Stars</SelectItem>
-                                            <SelectItem value="3">3 Stars</SelectItem>
-                                            <SelectItem value="2">2 Stars</SelectItem>
-                                            <SelectItem value="1">1 Star</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                            {/* Date Range Filter */}
+                            <div className="relative">
+                                <Calendar
+                                    size={16}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                                />
+                                <select
+                                    value={filterDateRange}
+                                    onChange={(e) => setFilterDateRange(e.target.value)}
+                                    className="appearance-none bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-10 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                >
+                                    <option value="all">All Time</option>
+                                    <option value="today">Today</option>
+                                    <option value="week">Last 7 Days</option>
+                                    <option value="month">Last 30 Days</option>
+                                </select>
+                                <ChevronDown
+                                    size={16}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                                />
+                            </div>
+
+                            {/* Rating Filter */}
+                            <div className="relative">
+                                <Star
+                                    size={16}
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                                />
+                                <select
+                                    value={filterRating || ""}
+                                    onChange={(e) =>
+                                        setFilterRating(e.target.value ? Number(e.target.value) : null)
+                                    }
+                                    className="appearance-none bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-10 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                >
+                                    <option value="">All Ratings</option>
+                                    <option value="5">5 Stars</option>
+                                    <option value="4">4 Stars</option>
+                                    <option value="3">3 Stars</option>
+                                    <option value="2">2 Stars</option>
+                                    <option value="1">1 Star</option>
+                                </select>
+                                <ChevronDown
+                                    size={16}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                                />
+                            </div>
 
                                 {hasActiveFilters && (
                                     <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 text-destructive hover:text-destructive hover:bg-destructive/10">
@@ -462,76 +478,82 @@ export default function AdminDashboard() {
 
             {/* Review Detail Dialog */}
             <Dialog open={!!selectedReview} onOpenChange={(open) => !open && setSelectedReview(null)}>
-                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-3">
-                            Review Details
-                            {selectedReview && (
-                                <Badge variant="secondary" className="font-normal">
-                                    {formatDate(selectedReview.created_at)}
-                                </Badge>
-                            )}
-                        </DialogTitle>
-                    </DialogHeader>
+                <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
                     {selectedReview && (
-                        <div className="space-y-5 pt-2">
-                            <div className="flex items-center gap-3">
-                                {renderStars(selectedReview.rating)}
-                                <span className="text-sm text-muted-foreground">
-                                    {selectedReview.rating === 5 ? "Excellent" :
-                                        selectedReview.rating === 4 ? "Great" :
-                                            selectedReview.rating === 3 ? "Good" :
-                                                selectedReview.rating === 2 ? "Fair" : "Poor"}
-                                </span>
-                            </div>
-
-                            <div className="space-y-2">
-                                <h4 className="text-sm font-medium text-foreground">Customer Review</h4>
-                                <p className="text-sm text-muted-foreground bg-muted/50 p-4 rounded-lg leading-relaxed">{selectedReview.review_text}</p>
-                            </div>
-
-                            <div className="space-y-2">
-                                <h4 className="text-sm font-medium text-primary flex items-center gap-2">
-                                    ✨ AI Summary
-                                </h4>
-                                <p className="text-sm text-muted-foreground leading-relaxed">{selectedReview.ai_summary}</p>
-                            </div>
-
-                            {selectedReview.ai_actions && selectedReview.ai_actions.length > 0 && (
-                                <div className="space-y-2">
-                                    <h4 className="text-sm font-medium text-amber-600 dark:text-amber-400 flex items-center gap-2">
-                                        💡 Recommended Actions
-                                    </h4>
-                                    <div className="flex flex-wrap gap-2">
-                                        {selectedReview.ai_actions.map((action, idx) => (
-                                            <Badge key={idx} variant="secondary" className="font-normal">
-                                                {action}
-                                            </Badge>
-                                        ))}
+                        <>
+                            <DialogHeader className="p-6 border-b">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <DialogTitle className="text-xl">Review Details</DialogTitle>
+                                        <DialogDescription className="flex items-center gap-2 mt-1">
+                                            <Clock size={12} /> {formatDate(selectedReview.created_at)}
+                                        </DialogDescription>
                                     </div>
+                                    {renderStars(selectedReview.rating)}
                                 </div>
-                            )}
+                            </DialogHeader>
 
-                            <div className="space-y-2">
-                                <h4 className="text-sm font-medium text-blue-600 dark:text-blue-400 flex items-center gap-2">
-                                    🤖 AI Response to Customer
-                                </h4>
-                                <p className="text-sm text-muted-foreground bg-blue-500/5 border border-blue-500/20 p-4 rounded-lg leading-relaxed">
-                                    {selectedReview.ai_response}
-                                </p>
+                            <ScrollArea className="flex-1">
+                                <div className="p-6 space-y-6">
+                                    <section>
+                                        <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Customer Feedback</h4>
+                                        <div className="bg-muted/50 p-4 rounded-xl border italic">
+                                            "{selectedReview.review_text}"
+                                        </div>
+                                    </section>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <section>
+                                            <h4 className="text-xs font-bold uppercase tracking-wider text-primary mb-3 flex items-center gap-2">
+                                                <Bot size={14} /> AI Summary
+                                            </h4>
+                                            <p className="text-sm leading-relaxed text-foreground/80">
+                                                {selectedReview.ai_summary}
+                                            </p>
+                                        </section>
+
+                                        <section>
+                                            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-500 mb-3 flex items-center gap-2">
+                                                <TrendingUp size={14} /> Recommended Actions
+                                            </h4>
+                                            <div className="flex flex-wrap gap-2">
+                                                {(selectedReview.ai_actions || []).map((action, idx) => (
+                                                    <Badge key={idx} variant="outline" className="bg-amber-500/5 border-amber-500/20 text-amber-500">
+                                                        {action}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        </section>
+                                    </div>
+
+                                    <Separator />
+
+                                    <section>
+                                        <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-500 mb-3 flex items-center gap-2">
+                                            🤖 AI Response Sent
+                                        </h4>
+                                        <div className="bg-emerald-500/5 p-4 rounded-xl border border-emerald-500/10 text-sm leading-relaxed">
+                                            {selectedReview.ai_response}
+                                        </div>
+                                    </section>
+                                </div>
+                            </ScrollArea>
+
+                            <div className="p-4 border-t bg-muted/20 flex justify-end">
+                                <Button onClick={() => setSelectedReview(null)}>Close</Button>
                             </div>
-                        </div>
+                        </>
                     )}
                 </DialogContent>
             </Dialog>
 
             {/* Footer */}
-            <footer className="border-t bg-muted/20">
-                <div className="max-w-7xl mx-auto py-4 px-6 flex items-center justify-between text-muted-foreground text-xs" suppressHydrationWarning>
-                    <p>Fynd AI Feedback System</p>
-                    <p>Last updated: {lastRefresh.toLocaleTimeString()}</p>
-                </div>
+            <footer className="max-w-7xl mx-auto py-8 text-center" suppressHydrationWarning>
+                <p className="text-xs text-muted-foreground">
+                    Last updated: {lastRefresh.toLocaleTimeString()} · Built with Shadcn UI & Lucide Icons
+                </p>
             </footer>
         </div>
     );
 }
+
