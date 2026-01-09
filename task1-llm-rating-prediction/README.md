@@ -1,46 +1,46 @@
-# Yelp Review Rating Prediction via LLM Prompting
+# Yelp Review Rating Prediction (Task 1)
 
-Predict Yelp review star ratings (1-5) using three LLM prompting strategies.
+This project implements an LLM-based system to predict star ratings (1-5) from Yelp review text using three different prompting strategies.
 
-## Approaches
+## Requirements
 
-| Method | ID | Description |
-|--------|-----|-------------|
-| Zero-Shot | 1 | Role-playing prompt, no examples |
-| Few-Shot | 2 | Zero-shot + 15 curated examples (3 per star) |
-| CoT + Few-Shot | 3 | Few-shot + chain-of-thought reasoning |
+- Python 3.8+
+- OpenRouter API Key (for LLM access)
 
 ## Setup
 
-```bash
-# Install dependencies
-pip install -r requirements.txt
+1. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-# Set API key
-export OPENROUTER_API_KEY='your-openrouter-api-key'
-```
+2. **Set API Key**:
+   ```bash
+   export OPENROUTER_API_KEY="your_api_key_here"
+   ```
 
 ## Usage
 
+**Run with Dummy Data (Test)**:
 ```bash
-# Test API connection
-python main.py --test-api
-
-# Run on sample (5 reviews)
-python main.py --input ../subset_200_balanced.csv --sample 5
-
-# Run full evaluation
-python main.py --input ../subset_200_balanced.csv
-
-# Run specific method only
-python main.py --input ../subset_200_balanced.csv --method 1
+python main.py --input dummy_data.csv
 ```
+
+**Run with Full Dataset**:
+1. Download the YELP dataset CSV.
+2. Run:
+```bash
+python main.py --input path/to/yelp_reviews.csv --sample 200
+```
+(Use `--sample 200` to limit to 200 rows for cost/efficiency).
+
+## Approaches Implemented
+
+1. **Zero-Shot**: Direct instruction without examples.
+2. **Few-Shot**: Includes 15 curated examples (3 per star rating) in the system prompt.
+3. **Chain-of-Thought (CoT)**: Asks the model to reason step-by-step (Sentiment -> Positives -> Negatives -> Severity -> Rating).
 
 ## Output
 
-- `results/predictions.csv` - All predictions with columns: star, review, predicted_star, explanation, method_id, raw_llm_output
-- `results/accuracy.json` - Accuracy metrics per method
-
-## Model
-
-Uses `nex-agi/deepseek-v3.1-nex-n1:free` via OpenRouter API.
+- **Console**: Displays an accuracy comparison table.
+- **`results/prediction_results.csv`**: Contains every prediction, explanation, and raw LLM output.

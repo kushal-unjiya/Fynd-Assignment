@@ -1,146 +1,269 @@
 """
-Main script to run Yelp rating prediction experiments.
+Yelp Rating Prediction via LLM Prompting
+Simple, self-contained implementation for Task 1.
 
 Usage:
-    python main.py --input ../subset_200_balanced.csv
-    python main.py --input ../subset_200_balanced.csv --sample 10
+    python main.py
+    python main.py --input dummy_data.csv --sample 10
 """
 import argparse
+import json
 import os
 import sys
+import time
 import pandas as pd
+import requests
 from tqdm import tqdm
+from dotenv import load_dotenv
+from prompts import get_step1_prompt, get_step2_prompt, get_step3_prompt
 
-# Add src to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# --- Config ---
+load_dotenv()
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
+# MODEL_NAME = "meta-llama/llama-3.2-3b-instruct:free"
+MODEL_NAME = "nex-agi/deepseek-v3.1-nex-n1:free"
 
-from src.config import (
-    METHOD_ZERO_SHOT, 
-    METHOD_FEW_SHOT, 
-    METHOD_COT_FEW_SHOT,
-    METHOD_NAMES,
-    OPENROUTER_API_KEY,
-)
-from src.predictor import predict_rating, test_api_connection
-from src.evaluator import calculate_all_accuracies, print_accuracy_table, save_results
-
-
-def load_data(input_path: str, sample_size: int = None) -> pd.DataFrame:
-    """Load and optionally sample the input CSV."""
-    df = pd.read_csv(input_path)
-    
-    # Ensure required columns exist
-    required_cols = ['stars', 'text']
-    for col in required_cols:
-        if col not in df.columns:
-            raise ValueError(f"Input CSV must have '{col}' column. Found: {df.columns.tolist()}")
-    
-    # Rename for consistency
-    df = df.rename(columns={'stars': 'star', 'text': 'review'})
-    
-    if sample_size and sample_size < len(df):
-        df = df.sample(n=sample_size, random_state=42)
-        print(f"Sampled {sample_size} reviews from {len(df)} total")
-    
-    return df[['star', 'review']].reset_index(drop=True)
-
-
-def run_predictions(df: pd.DataFrame, methods: list = None) -> pd.DataFrame:
-    """
-    Run predictions for all reviews using all methods.
-    
-    Returns DataFrame with columns:
-        star, review, predicted_star, explanation, method_id, raw_llm_output
-    """
-    if methods is None:
-        methods = [METHOD_ZERO_SHOT, METHOD_FEW_SHOT, METHOD_COT_FEW_SHOT]
-    
-    results = []
-    total_iterations = len(df) * len(methods)
-    
-    print(f"\nRunning predictions: {len(df)} reviews × {len(methods)} methods = {total_iterations} API calls")
-    print("="*60)
-    
-    with tqdm(total=total_iterations, desc="Predicting") as pbar:
-        for idx, row in df.iterrows():
-            review = row['review']
-            actual_star = row['star']
-            
-            for method_id in methods:
-                pbar.set_description(f"Review {idx+1}/{len(df)}, Method {method_id}")
-                
-                try:
-                    prediction = predict_rating(review, method_id)
-                    
-                    results.append({
-                        'star': actual_star,
-                        'review': review[:500] + "..." if len(review) > 500 else review,  # Truncate for CSV
-                        'predicted_star': prediction['predicted_stars'],
-                        'explanation': prediction['explanation'],
-                        'method_id': method_id,
-                        'raw_llm_output': prediction['raw_llm_output'],
-                    })
-                except Exception as e:
-                    results.append({
-                        'star': actual_star,
-                        'review': review[:500] + "..." if len(review) > 500 else review,
-                        'predicted_star': -1,
-                        'explanation': f"Error: {str(e)}",
-                        'method_id': method_id,
-                        'raw_llm_output': str(e),
-                    })
-                
-                pbar.update(1)
-    
-    return pd.DataFrame(results)
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Yelp Rating Prediction via LLM Prompting")
-    parser.add_argument("--input", type=str, required=True, help="Path to input CSV file")
-    parser.add_argument("--sample", type=int, default=None, help="Number of reviews to sample (optional)")
-    parser.add_argument("--output-dir", type=str, default="results", help="Output directory for results")
-    parser.add_argument("--method", type=int, choices=[1, 2, 3], default=None, 
-                        help="Run only specific method (1=zero-shot, 2=few-shot, 3=cot)")
-    parser.add_argument("--test-api", action="store_true", help="Only test API connection")
-    
-    args = parser.parse_args()
-    
-    # Check API key
+# --- Predictor ---
+def call_llm(system_prompt, user_prompt):
+    """Make API call to OpenRouter with retries."""
     if not OPENROUTER_API_KEY:
-        print("❌ Error: OPENROUTER_API_KEY environment variable not set!")
-        print("   Set it with: export OPENROUTER_API_KEY='your-key-here'")
-        sys.exit(1)
+        raise ValueError("OPENROUTER_API_KEY environment variable not set")
+        
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://github.com/your-repo", # Optional
+    }
     
-    # Test API only
-    if args.test_api:
-        success = test_api_connection()
-        sys.exit(0 if success else 1)
+    payload = {
+        "model": MODEL_NAME,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        "temperature": 0.3,
+        "max_tokens": 1024,
+        "response_format": {"type": "json_object"} 
+    }
     
-    # Load data
-    print(f"Loading data from: {args.input}")
-    df = load_data(args.input, args.sample)
-    print(f"Loaded {len(df)} reviews")
-    print(f"Star distribution:\n{df['star'].value_counts().sort_index()}")
-    
-    # Determine methods to run
-    methods = [args.method] if args.method else [METHOD_ZERO_SHOT, METHOD_FEW_SHOT, METHOD_COT_FEW_SHOT]
-    
-    # Run predictions
-    predictions_df = run_predictions(df, methods)
-    
-    # Calculate accuracies
-    print("\nCalculating accuracies...")
-    accuracies = calculate_all_accuracies(predictions_df)
-    
-    # Print results
-    print_accuracy_table(accuracies)
-    
-    # Save results
-    save_results(predictions_df, accuracies, args.output_dir)
-    
-    print("\n✅ Done!")
+    for attempt in range(5): # Increased to 5 attempts
+        try:
+            response = requests.post(OPENROUTER_BASE_URL, headers=headers, json=payload, timeout=30)
+            if response.status_code == 200:
+                response_json = response.json()
+                if 'error' in response_json:
+                     # Handle cases where API returns 200 but body contains error
+                    print(f"API Error in body: {response_json['error']}")
+                    time.sleep(5)
+                    continue
+                    
+                return response_json['choices'][0]['message']['content']
+            elif response.status_code == 429:
+                sleep_time = 5 * (attempt + 1) # Increased backoff
+                print(f"Rate limited. Sleeping {sleep_time}s...")
+                time.sleep(sleep_time) 
+            else:
+                print(f"API Error {response.status_code}: {response.text}")
+                time.sleep(2)
+        except Exception as e:
+            print(f"Request failed: {e}")
+            time.sleep(2)
+            
+    return None
 
+def parse_json(raw_text):
+    """Extract and parse JSON from LLM output."""
+    try:
+        # Clean markdown code blocks if present
+        cleaned = raw_text.strip()
+        if cleaned.startswith("```json"):
+            cleaned = cleaned[7:]
+        if cleaned.startswith("```"):
+            cleaned = cleaned[3:]
+        if cleaned.endswith("```"):
+            cleaned = cleaned[:-3]
+        
+        data = json.loads(cleaned)
+        
+        # Normalize keys
+        if 'rating' in data and 'predicted_stars' not in data:
+            data['predicted_stars'] = data['rating']
+            
+        return data
+    except Exception:
+        return None
+
+def predict_rating(review, method_id):
+    """
+    Get prediction for a review using specified method.
+    Methods: 1=Zero-shot, 2=Few-shot, 3=CoT
+    """
+    if method_id == 1:
+        sys_p, user_p = get_step1_prompt(review)
+    elif method_id == 2:
+        sys_p, user_p = get_step2_prompt(review)
+    elif method_id == 3:
+        sys_p, user_p = get_step3_prompt(review)
+    else:
+        raise ValueError("Unknown method_id")
+        
+    raw_output = call_llm(sys_p, user_p)
+    if not raw_output:
+        return {"predicted_stars": -1, "explanation": "API Call Failed", "valid_json": False}
+        
+    parsed = parse_json(raw_output)
+    
+    if parsed and isinstance(parsed.get('predicted_stars'), (int, float)):
+        return {
+            "predicted_stars": int(parsed['predicted_stars']),
+            "explanation": parsed.get('explanation', ''),
+            "valid_json": True,
+            "raw_output": raw_output
+        }
+    else:
+        return {
+            "predicted_stars": -1, 
+            "explanation": "JSON Parse Error", 
+            "valid_json": False,
+            "raw_output": raw_output
+        }
+
+# --- Evaluation ---
+def evaluate_results(results_df):
+    """Calculate and print metrics."""
+    metrics = []
+    
+    print("\n--- Evaluation Results ---")
+    print(f"{'Method':<15} | {'Acc (Exact)':<12} | {'Acc (±1)':<12} | {'JSON Valid %':<12} | {'Time (s)':<10}")
+    print("-" * 70)
+    
+    for method_id, group_df in results_df.groupby('method'):
+        total = len(group_df)
+        valid_json_count = group_df['valid_json'].sum()
+        
+        # Filter for valid predictions for accuracy
+        valid_preds = group_df[group_df['predicted_stars'] != -1]
+        
+        if len(valid_preds) > 0:
+            exact_matches = (valid_preds['actual_stars'] == valid_preds['predicted_stars']).sum()
+            within_one = (abs(valid_preds['actual_stars'] - valid_preds['predicted_stars']) <= 1).sum()
+            
+            acc_exact = (exact_matches / len(valid_preds)) * 100
+            acc_within1 = (within_one / len(valid_preds)) * 100
+        else:
+            acc_exact = 0
+            acc_within1 = 0
+            
+        json_valid_rate = (valid_json_count / total) * 100
+        
+        method_name = ["Zero-Shot", "Few-Shot", "CoT-Reason"][method_id-1] if method_id <=3 else str(method_id)
+        
+        print(f"{method_name:<15} | {acc_exact:5.1f}%       | {acc_within1:5.1f}%       | {json_valid_rate:5.1f}%       | {'N/A'}")
+        
+        metrics.append({
+            "method": method_name,
+            "exact_accuracy": acc_exact,
+            "within_1_accuracy": acc_within1,
+            "json_validity": json_valid_rate
+        })
+        
+    return metrics
+
+# --- Main ---
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", default="dummy_data.csv", help="Input CSV file (must have 'stars' and 'text' cols)")
+    parser.add_argument("--sample", type=int, default=None, help="Sample size")
+    args = parser.parse_args()
+
+    if not OPENROUTER_API_KEY:
+        print("WARNING: OPENROUTER_API_KEY not set. API calls will fail.")
+    
+    print(f"Loading {args.input}...")
+    try:
+        df = pd.read_csv(args.input)
+    except FileNotFoundError:
+        print(f"Error: {args.input} not found.")
+        return
+
+    if 'stars' not in df.columns or 'text' not in df.columns:
+        print("Error: CSV must contain 'stars' and 'text' columns.")
+        return
+
+    if args.sample:
+        df = df.sample(min(args.sample, len(df)))
+        print(f"Sampled {len(df)} rows.")
+
+    results = []
+    methods = [1, 2, 3] # Run all 3 approaches
+    
+    # Prepare tasks for parallel execution
+    tasks = []
+    
+    # Create method names mapping for better progress bar
+    method_names = {1: "Zero-Shot", 2: "Few-Shot", 3: "CoT"}
+
+    for index, row in df.iterrows():
+        review_text = row['text']
+        actual_star = row['stars']
+        for m_id in methods:
+            tasks.append({
+                "index": index,
+                "review": review_text,
+                "actual_star": actual_star,
+                "method_id": m_id,
+                "method_name": method_names[m_id]
+            })
+
+    print(f"Processing {len(tasks)} total API calls (Sequential for stability)...")
+    
+    # Define a helper for the thread pool
+    def process_task(task):
+        m_id = task['method_id']
+        rev = task['review']
+        # SLEEP to avoid rate limits
+        time.sleep(2)
+        res = predict_rating(rev, m_id)
+        
+        return {
+            "method": m_id,
+            "review_preview": rev[:50] + "...",
+            "actual_stars": task['actual_star'],
+            "predicted_stars": res['predicted_stars'],
+            "explanation": res['explanation'],
+            "valid_json": res['valid_json'],
+            "raw_output": res.get('raw_output', '')
+        }
+
+    # Run in parallel
+    import concurrent.futures
+    
+    # Set to 1 to effectively run sequentially but keep architecture
+    MAX_WORKERS = 1 
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        # Submit all tasks
+        futures = [executor.submit(process_task, task) for task in tasks]
+        
+        # Process as they complete
+        for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures)):
+            try:
+                result = future.result()
+                results.append(result)
+            except Exception as e:
+                print(f"Task failed: {e}")
+
+    results_df = pd.DataFrame(results)
+    
+    # Save raw results
+    results_df.to_csv("results/prediction_results.csv", index=False)
+    print("\nSaved detailed results to results/prediction_results.csv")
+    
+    # Evaluate
+    evaluate_results(results_df)
 
 if __name__ == "__main__":
+    # Ensure results dir exists
+    os.makedirs("results", exist_ok=True)
     main()
