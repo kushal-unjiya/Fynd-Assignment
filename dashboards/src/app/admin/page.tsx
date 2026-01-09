@@ -152,7 +152,7 @@ export default function AdminDashboard() {
 
     const formatDate = (dateStr: string) => {
         return new Date(dateStr).toLocaleDateString("en-US", {
-            month: "numeric",
+            month: "short",
             day: "numeric",
             year: "numeric"
         });
@@ -164,16 +164,29 @@ export default function AdminDashboard() {
                 {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                         key={star}
-                        size={16}
-                        className={star <= rating ? "fill-amber-400 text-amber-400" : "text-gray-300"}
+                        size={14}
+                        className={cn(
+                            star <= rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"
+                        )}
                     />
                 ))}
             </div>
         );
     };
 
+    const getRatingColor = (star: number) => {
+        switch (star) {
+            case 5: return "bg-emerald-500";
+            case 4: return "bg-emerald-400";
+            case 3: return "bg-amber-400";
+            case 2: return "bg-orange-400";
+            case 1: return "bg-destructive";
+            default: return "bg-muted";
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-slate-50 p-6 md:p-8">
+        <div className="min-h-screen bg-background p-4 md:p-8 space-y-8">
             {/* Header */}
             <header className="max-w-7xl mx-auto mb-6">
                 <div className="flex items-center justify-between">
@@ -212,22 +225,27 @@ export default function AdminDashboard() {
                 </div>
             </header>
 
-            <div className="max-w-7xl mx-auto space-y-4">
-                {/* Stats + Chart Row - Compact */}
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
-                    {/* Total Reviews - 1/5 */}
-                    <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-                        <div className="flex items-center justify-between">
+            <div className="max-w-7xl mx-auto space-y-6">
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Total Reviews */}
+                    <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                        <div className="flex items-start justify-between">
                             <div>
                                 <p className="text-slate-500 text-xs font-medium">Total Reviews</p>
                                 <p className="text-2xl font-bold text-slate-800 mt-1">{total}</p>
                             </div>
+                            <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+                                <MessageSquare className="text-emerald-500" size={24} />
                             <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
                                 <MessageSquare className="text-emerald-500" size={16} />
                             </div>
                         </div>
                     </div>
 
+                    {/* Average Rating */}
+                    <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                        <div className="flex items-start justify-between">
                     {/* Average Rating - 1/5 */}
                     <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
                         <div className="flex items-center justify-between">
@@ -235,12 +253,42 @@ export default function AdminDashboard() {
                                 <p className="text-slate-500 text-xs font-medium">Average Rating</p>
                                 <p className="text-2xl font-bold text-slate-800 mt-1">{averageRating}</p>
                             </div>
+                            <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center">
+                                <Star className="text-amber-500 fill-amber-500" size={24} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
                             <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
                                 <Star className="text-amber-500 fill-amber-500" size={16} />
                             </div>
                         </div>
                     </div>
 
+                {/* Rating Distribution */}
+                <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                    <h3 className="text-slate-800 font-semibold flex items-center gap-2 mb-6">
+                        <div className="w-1 h-5 bg-emerald-500 rounded-full"></div>
+                        Rating Distribution
+                    </h3>
+                    <div className="space-y-4">
+                        {[5, 4, 3, 2, 1].map((star, idx) => (
+                            <div key={star} className="flex items-center gap-4">
+                                <span className="text-sm text-slate-600 w-16">{star} stars</span>
+                                <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full transition-all duration-500 ${star === 5 ? "bg-emerald-500" :
+                                                star === 4 ? "bg-emerald-400" :
+                                                    star === 3 ? "bg-amber-400" :
+                                                        star === 2 ? "bg-orange-400" :
+                                                            "bg-red-400"
+                                            }`}
+                                        style={{ width: `${(ratingCounts[idx] / maxCount) * 100}%` }}
+                                    />
+                                </div>
+                                <span className="text-sm text-slate-500 w-12 text-right">{ratingCounts[idx]}</span>
+                            </div>
+                        ))}
                     {/* Rating Distribution - 3/5 - Compact */}
                     <div className="lg:col-span-3 bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
                         <h3 className="text-slate-800 text-sm font-semibold flex items-center gap-2 mb-2">
@@ -347,8 +395,8 @@ export default function AdminDashboard() {
                                 <RefreshCw size={18} className="text-slate-600" />
                             </button>
                         </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
 
                 {/* Reviews Table */}
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -425,62 +473,84 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            {/* Review Detail Modal */}
-            {selectedReview && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedReview(null)}>
-                    <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                        <div className="p-6 border-b border-slate-200">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-semibold text-slate-800">Review Details</h3>
-                                <button onClick={() => setSelectedReview(null)} className="text-slate-400 hover:text-slate-600">✕</button>
-                            </div>
-                        </div>
-                        <div className="p-6 space-y-6">
-                            <div className="flex items-center gap-4">
-                                {renderStars(selectedReview.rating)}
-                                <span className="text-sm text-slate-500">{formatDate(selectedReview.created_at)}</span>
-                            </div>
-
-                            <div>
-                                <h4 className="text-sm font-semibold text-slate-600 mb-2">Customer Review</h4>
-                                <p className="text-slate-700 bg-slate-50 p-4 rounded-lg">{selectedReview.review_text}</p>
-                            </div>
-
-                            <div>
-                                <h4 className="text-sm font-semibold text-emerald-600 mb-2 flex items-center gap-2">
-                                    ✨ AI Summary
-                                </h4>
-                                <p className="text-slate-600">{selectedReview.ai_summary}</p>
-                            </div>
-
-                            <div>
-                                <h4 className="text-sm font-semibold text-amber-600 mb-2 flex items-center gap-2">
-                                    💡 Recommended Actions
-                                </h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {(selectedReview.ai_actions || []).map((action, idx) => (
-                                        <span key={idx} className="text-sm bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full border border-amber-200">
-                                            {action}
-                                        </span>
-                                    ))}
+            {/* Review Detail Dialog */}
+            <Dialog open={!!selectedReview} onOpenChange={(open) => !open && setSelectedReview(null)}>
+                <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
+                    {selectedReview && (
+                        <>
+                            <DialogHeader className="p-6 border-b">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <DialogTitle className="text-xl">Review Details</DialogTitle>
+                                        <DialogDescription className="flex items-center gap-2 mt-1">
+                                            <Clock size={12} /> {formatDate(selectedReview.created_at)}
+                                        </DialogDescription>
+                                    </div>
+                                    {renderStars(selectedReview.rating)}
                                 </div>
-                            </div>
+                            </DialogHeader>
 
-                            <div>
-                                <h4 className="text-sm font-semibold text-blue-600 mb-2 flex items-center gap-2">
-                                    🤖 AI Response to Customer
-                                </h4>
-                                <p className="text-slate-600 bg-blue-50 p-4 rounded-lg border border-blue-100">{selectedReview.ai_response}</p>
+                            <ScrollArea className="flex-1">
+                                <div className="p-6 space-y-6">
+                                    <section>
+                                        <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Customer Feedback</h4>
+                                        <div className="bg-muted/50 p-4 rounded-xl border italic">
+                                            "{selectedReview.review_text}"
+                                        </div>
+                                    </section>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <section>
+                                            <h4 className="text-xs font-bold uppercase tracking-wider text-primary mb-3 flex items-center gap-2">
+                                                <Bot size={14} /> AI Summary
+                                            </h4>
+                                            <p className="text-sm leading-relaxed text-foreground/80">
+                                                {selectedReview.ai_summary}
+                                            </p>
+                                        </section>
+
+                                        <section>
+                                            <h4 className="text-xs font-bold uppercase tracking-wider text-amber-500 mb-3 flex items-center gap-2">
+                                                <TrendingUp size={14} /> Recommended Actions
+                                            </h4>
+                                            <div className="flex flex-wrap gap-2">
+                                                {(selectedReview.ai_actions || []).map((action, idx) => (
+                                                    <Badge key={idx} variant="outline" className="bg-amber-500/5 border-amber-500/20 text-amber-500">
+                                                        {action}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        </section>
+                                    </div>
+
+                                    <Separator />
+
+                                    <section>
+                                        <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-500 mb-3 flex items-center gap-2">
+                                            🤖 AI Response Sent
+                                        </h4>
+                                        <div className="bg-emerald-500/5 p-4 rounded-xl border border-emerald-500/10 text-sm leading-relaxed">
+                                            {selectedReview.ai_response}
+                                        </div>
+                                    </section>
+                                </div>
+                            </ScrollArea>
+
+                            <div className="p-4 border-t bg-muted/20 flex justify-end">
+                                <Button onClick={() => setSelectedReview(null)}>Close</Button>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+                        </>
+                    )}
+                </DialogContent>
+            </Dialog>
 
             {/* Footer */}
-            <footer className="max-w-7xl mx-auto mt-8 text-center text-slate-400 text-sm" suppressHydrationWarning>
-                <p>Last updated: {lastRefresh.toLocaleTimeString()}</p>
+            <footer className="max-w-7xl mx-auto py-8 text-center" suppressHydrationWarning>
+                <p className="text-xs text-muted-foreground">
+                    Last updated: {lastRefresh.toLocaleTimeString()} · Built with Shadcn UI & Lucide Icons
+                </p>
             </footer>
         </div>
     );
 }
+
