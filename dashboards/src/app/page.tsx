@@ -19,6 +19,8 @@ export default function UserDashboard() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+  const isFormInvalid = rating === 0 || reviewText.trim().length < 10 || isSubmitting;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -163,8 +165,8 @@ export default function UserDashboard() {
             <CardFooter>
               <Button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full h-12 text-base font-semibold transition-all hover:shadow-[0_0_20px_rgba(var(--primary),0.3)]"
+                disabled={isFormInvalid}
+                className="w-full h-12 text-base font-semibold transition-all bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-500 hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <>
@@ -195,7 +197,7 @@ export default function UserDashboard() {
               )}
             </CardHeader>
             <CardContent>
-              <p className="text-foreground/90 leading-relaxed italic whitespace-pre-line">
+              <p className="text-foreground/90 leading-relaxed whitespace-pre-line">
                 "{aiResponse}"
               </p>
             </CardContent>
