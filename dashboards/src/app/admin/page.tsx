@@ -496,9 +496,16 @@ export default function AdminDashboard() {
                                             </p>
                                         </TableCell>
                                         <TableCell>
-                                            <p className="text-sm text-muted-foreground line-clamp-2 max-w-sm">
-                                                {review.ai_summary || "Processing..."}
-                                            </p>
+                                            <div className="space-y-1">
+                                                <p className="text-sm text-muted-foreground line-clamp-2 max-w-sm">
+                                                    {review.ai_summary || "Processing..."}
+                                                </p>
+                                                {review.ai_summary?.toLowerCase().includes('conflict') && (
+                                                    <Badge variant="outline" className="text-xs border-amber-500/50 text-amber-600 dark:text-amber-400">
+                                                        ⚠️ Conflict Detected
+                                                    </Badge>
+                                                )}
+                                            </div>
                                         </TableCell>
                                         <TableCell className="text-muted-foreground text-sm">{formatDate(review.created_at)}</TableCell>
                                         <TableCell>
@@ -564,8 +571,39 @@ export default function AdminDashboard() {
                                             <h4 className="text-xs font-bold uppercase tracking-wider text-primary mb-3 flex items-center gap-2">
                                                 <Bot size={14} /> AI Summary
                                             </h4>
-                                            <div className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line wrap-break-word">
-                                                {selectedReview.ai_summary}
+                                            {selectedReview.ai_summary.toLowerCase().includes('conflict') && (
+                                                <div className="mb-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2">
+                                                    <span className="text-amber-500 text-lg">⚠️</span>
+                                                    <div className="text-xs text-amber-600 dark:text-amber-400">
+                                                        <strong>Conflict Detected:</strong> Rating and review text don't match. This requires manual review to clarify customer's actual satisfaction level.
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <div className="space-y-3">
+                                                {selectedReview.ai_summary.split('\n\n').filter(Boolean).map((field, idx) => {
+                                                    const [label, ...contentParts] = field.split(':');
+                                                    const content = contentParts.join(':').trim();
+                                                    
+                                                    // Highlight if it's the sentiment line with low confidence or conflict
+                                                    const isConflictLine = label.toLowerCase().includes('sentiment') && 
+                                                        (content.toLowerCase().includes('low confidence') || 
+                                                         content.toLowerCase().includes('conflict'));
+                                                    
+                                                    return (
+                                                        <div key={idx} className={cn(
+                                                            "text-sm",
+                                                            isConflictLine && "p-2 bg-amber-500/5 rounded border border-amber-500/20"
+                                                        )}>
+                                                            <span className={cn(
+                                                                "font-semibold",
+                                                                isConflictLine ? "text-amber-600 dark:text-amber-400" : "text-primary"
+                                                            )}>
+                                                                {label.trim()}:
+                                                            </span>
+                                                            <span className="ml-2 text-foreground/80">{content}</span>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         </section>
 
